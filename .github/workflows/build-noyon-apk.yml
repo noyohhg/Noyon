@@ -52,8 +52,27 @@ jobs:
           p = Path('app/build.gradle.kts')
           s = p.read_text()
           s += '\n\ntasks.withType<JavaCompile>().configureEach {\n    sourceCompatibility = "17"\n    targetCompatibility = "17"\n}\n'
+          # Force Android's Java and Kotlin targets explicitly in the app module.
+          s += '''
+          
+          android {
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+          }
+          
+          tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+              kotlinOptions.jvmTarget = "17"
+          }
+          '''
           p.write_text(s)
-          print('Forced Java compiler target to JVM 17.')
+          # Replace legacy Java targets in every Gradle Kotlin build file, if present.
+          for p in Path('.').rglob('*.gradle.kts'):
+              t = p.read_text()
+              t = t.replace('JavaVersion.VERSION_1_8', 'JavaVersion.VERSION_17')
+              p.write_text(t)
+          print('Forced Android Java and Kotlin targets to JVM 17.')
           PY
 
       - name: Build debug APK
