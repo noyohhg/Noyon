@@ -35,6 +35,19 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Align Java and Kotlin JVM targets
+        working-directory: extracted/NOYON-A
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('app/build.gradle.kts')
+          s = p.read_text()
+          s = s.replace('JavaVersion.VERSION_1_8', 'JavaVersion.VERSION_17')
+          s = s.replace('JavaVersion.VERSION_11', 'JavaVersion.VERSION_17')
+          p.write_text(s)
+          print('Aligned Java compatibility to JVM 17 where configured.')
+          PY
+
       - name: Build debug APK
         working-directory: extracted/NOYON-A
         run: gradle assembleDebug --no-daemon
