@@ -45,7 +45,15 @@ jobs:
           s = s.replace('JavaVersion.VERSION_1_8', 'JavaVersion.VERSION_17')
           s = s.replace('JavaVersion.VERSION_11', 'JavaVersion.VERSION_17')
           p.write_text(s)
-          print('Aligned Java compatibility to JVM 17 where configured.')
+          # Force both Java and Kotlin compilation tasks to the same JVM target.
+          p = Path('build.gradle.kts')
+          root = p.read_text() if p.exists() else ''
+          p.write_text(root + '\n\nallprojects {\n    tasks.withType<JavaCompile>().configureEach {\n        sourceCompatibility = "17"\n        targetCompatibility = "17"\n    }\n}\n')
+          p = Path('app/build.gradle.kts')
+          s = p.read_text()
+          s += '\n\ntasks.withType<JavaCompile>().configureEach {\n    sourceCompatibility = "17"\n    targetCompatibility = "17"\n}\n'
+          p.write_text(s)
+          print('Forced Java compiler target to JVM 17.')
           PY
 
       - name: Build debug APK
